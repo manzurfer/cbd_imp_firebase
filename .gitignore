@@ -1,4 +1,38 @@
+# IDE
 .idea/
 *.iml
 *.iws
 *.ipr
+.vscode/
+
+# Gradle
+.gradle/
+build/
+*.apk
+*.aab
+local.properties
+gradlew.bat
+gradlew
+
+# Android
+.DS_Store
+lint.xml
+gen/
+bin/
+
+# Firebase
+google-services.json
+
+# Logs
+*.log
+
+# Otros
+*.swp
+*.swo
+*~
+.classpath
+.project
+.settings/
+*.keystore
+*.jks
+.cxx/
