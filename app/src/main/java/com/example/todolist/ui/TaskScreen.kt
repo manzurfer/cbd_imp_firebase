@@ -396,7 +396,7 @@ private fun TaskCard(
 ) {
     val cardColor by animateColorAsState(
         targetValue = if (task.completed)
-            Color(0xFFF5F5F5)
+            Color(0xFF48D482)
         else
             MaterialTheme.colorScheme.surface,
         animationSpec = tween(300),
@@ -437,10 +437,10 @@ private fun TaskCard(
                 Text(
                     text = task.title,
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = if (task.completed) FontWeight.Normal else FontWeight.Medium,
+                    fontWeight = if (task.completed) FontWeight.Bold else FontWeight.Medium,
                     textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None,
                     color = if (task.completed)
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        Color.Black
                     else
                         MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
@@ -452,9 +452,7 @@ private fun TaskCard(
                     Text(
                         text = task.description,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
-                            alpha = if (task.completed) 0.4f else 0.7f
-                        ),
+                        color = if (task.completed) Color(0xffffffff) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None
