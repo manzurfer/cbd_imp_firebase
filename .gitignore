@@ -36,3 +36,5 @@ google-services.json
 *.keystore
 *.jks
 .cxx/
+
+reports/
