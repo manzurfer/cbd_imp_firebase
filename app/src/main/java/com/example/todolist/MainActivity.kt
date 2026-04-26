@@ -106,6 +106,38 @@ fun AppNavigation() {
             val taskViewModel: TaskViewModel = hiltViewModel()
             val listName = taskViewModel.todoList?.name ?: "Tareas"
 
+            // Diálogo cuando el usuario es expulsado de la lista
+            if (taskViewModel.wasRemoved) {
+                AlertDialog(
+                    onDismissRequest = { },
+                    title = {
+                        Text(
+                            "Acceso revocado",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    text = {
+                        Text("Ya no tienes acceso a esta lista. Es posible que el propietario te haya eliminado como miembro.")
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                navController.navigate("lists") {
+                                    popUpTo("lists") { inclusive = true }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF667eea)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Volver a mis listas")
+                        }
+                    },
+                    shape = RoundedCornerShape(20.dp)
+                )
+            }
+
             TaskScreen(
                 listName = listName,
                 tasks = taskViewModel.tasks,

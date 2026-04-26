@@ -40,6 +40,10 @@ class TaskViewModel @Inject constructor(
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+    /** Indica que el usuario fue expulsado de la lista (PERMISSION_DENIED). */
+    var wasRemoved by mutableStateOf(false)
+        private set
+
     val currentUid: String
         get() = auth.currentUser?.uid ?: ""
 
@@ -51,6 +55,17 @@ class TaskViewModel @Inject constructor(
     }
 
     /**
+     * Comprueba si un error es de tipo PERMISSION_DENIED de Firestore,
+     * lo que indica que el usuario ya no es miembro de la lista.
+     */
+    private fun isPermissionDenied(e: Throwable): Boolean {
+        val msg = e.message?.lowercase() ?: ""
+        return msg.contains("permission_denied") ||
+               msg.contains("permission-denied") ||
+               msg.contains("missing or insufficient permissions")
+    }
+
+    /**
      * Observa la información de la lista en tiempo real (miembros, roles, nombre).
      * Los cambios se propagan automáticamente sin necesidad de recargar.
      */
@@ -58,11 +73,20 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             repository.observeList(listId)
                 .catch { e ->
-                    errorMessage = e.message
+                    if (isPermissionDenied(e)) {
+                        wasRemoved = true
+                    } else {
+                        errorMessage = e.message
+                    }
                 }
                 .collect { list ->
-                    todoList = list
-                    currentUserRole = list?.getRoleForUser(currentUid) ?: MemberRole.VIEWER
+                    if (list == null && todoList != null) {
+                        // La lista fue eliminada o perdimos acceso
+                        wasRemoved = true
+                    } else {
+                        todoList = list
+                        currentUserRole = list?.getRoleForUser(currentUid) ?: MemberRole.VIEWER
+                    }
                 }
         }
     }
@@ -74,7 +98,11 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             repository.getTasks(listId)
                 .catch { e ->
-                    errorMessage = e.message
+                    if (isPermissionDenied(e)) {
+                        wasRemoved = true
+                    } else {
+                        errorMessage = e.message
+                    }
                     isLoading = false
                 }
                 .collect { result ->
