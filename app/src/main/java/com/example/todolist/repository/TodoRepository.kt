@@ -330,4 +330,50 @@ class TodoRepository @Inject constructor(
             memberEmails = memberEmails
         )
     }
+
+    /**
+     * Observa una lista en tiempo real mediante snapshot listener.
+     * Los cambios en miembros, roles o nombre se propagan automáticamente.
+     */
+    fun observeList(listId: String): Flow<TodoList?> = callbackFlow {
+        val listener = listsCollection.document(listId)
+            .addSnapshotListener { doc, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                if (doc == null || !doc.exists()) {
+                    trySend(null)
+                    return@addSnapshotListener
+                }
+
+                val data = doc.data ?: run {
+                    trySend(null)
+                    return@addSnapshotListener
+                }
+
+                val members = (data["members"] as? Map<*, *>)
+                    ?.mapKeys { it.key.toString() }
+                    ?.mapValues { it.value.toString() }
+                    ?: emptyMap()
+
+                val memberEmails = (data["memberEmails"] as? Map<*, *>)
+                    ?.mapKeys { it.key.toString() }
+                    ?.mapValues { it.value.toString() }
+                    ?: emptyMap()
+
+                val todoList = TodoList(
+                    id = doc.id,
+                    name = data["name"]?.toString() ?: "",
+                    ownerId = data["ownerId"]?.toString() ?: "",
+                    createdAt = data["createdAt"] as? Timestamp,
+                    members = members,
+                    memberEmails = memberEmails
+                )
+                trySend(todoList)
+            }
+
+        awaitClose { listener.remove() }
+    }
 }

@@ -45,23 +45,25 @@ class TaskViewModel @Inject constructor(
 
     init {
         if (listId.isNotEmpty()) {
-            loadListInfo()
+            observeListInfo()
             loadTasks()
         }
     }
 
     /**
-     * Carga la información de la lista y determina el rol del usuario.
+     * Observa la información de la lista en tiempo real (miembros, roles, nombre).
+     * Los cambios se propagan automáticamente sin necesidad de recargar.
      */
-    private fun loadListInfo() {
+    private fun observeListInfo() {
         viewModelScope.launch {
-            try {
-                val list = repository.getList(listId)
-                todoList = list
-                currentUserRole = list?.getRoleForUser(currentUid) ?: MemberRole.VIEWER
-            } catch (e: Exception) {
-                errorMessage = e.message
-            }
+            repository.observeList(listId)
+                .catch { e ->
+                    errorMessage = e.message
+                }
+                .collect { list ->
+                    todoList = list
+                    currentUserRole = list?.getRoleForUser(currentUid) ?: MemberRole.VIEWER
+                }
         }
     }
 
@@ -179,7 +181,6 @@ class TaskViewModel @Inject constructor(
                 errorMessage = e.message
             }
             result.onSuccess {
-                loadListInfo() // Recargar info de la lista
                 errorMessage = null
             }
         }
@@ -193,7 +194,6 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repository.updateMemberRole(listId, targetUid, newRole)
-                loadListInfo()
             } catch (e: Exception) {
                 errorMessage = e.message
             }
@@ -208,7 +208,6 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repository.removeMember(listId, targetUid)
-                loadListInfo()
             } catch (e: Exception) {
                 errorMessage = e.message
             }

@@ -129,8 +129,12 @@ fun AppNavigation() {
         composable(
             route = "members/{listId}",
             arguments = listOf(navArgument("listId") { type = NavType.StringType })
-        ) {
-            val taskViewModel: TaskViewModel = hiltViewModel()
+        ) { backStackEntry ->
+            // Compartir el mismo TaskViewModel de la pantalla de tareas
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("tasks/{listId}")
+            }
+            val taskViewModel: TaskViewModel = hiltViewModel(parentEntry)
 
             MembersScreen(
                 listName = taskViewModel.todoList?.name ?: "",
